@@ -63,7 +63,7 @@ int main(int argc, char *argv_[]) {
 #error unknown compiler!
 #endif
 
-	wprintf(L"Coco/R (Jan 02, 2012)\n");
+	wprintf(L"Coco/R (Dec 02, 2014)\n");
 
 	std::wstring srcName, nsName, frameDir, ddtString, traceFileName;
 	std::wstring outDir;

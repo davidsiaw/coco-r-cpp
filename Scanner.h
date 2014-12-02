@@ -886,7 +886,6 @@ bool Comment1() {
 			pt = tokens = tokens->next;
 		}
 
-		std::wcerr << tokens->val << std::endl;
 		return tokens;
 	}
 
