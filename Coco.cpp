@@ -50,12 +50,12 @@ Coco/R itself) does not fall under the GNU General Public License.
 using namespace Coco;
 
 #ifdef _WIN32
-int wmain(int argc, wchar_t *argv[]) {
+int wmain(int argc, std::wstring argv[]) {
 #elif defined __GNUC__
 int main(int argc, char *argv_[]) {
-	wchar_t ** argv = new wchar_t*[argc];
+	std::wstring * argv = new std::wstring[argc];
 	for (int i = 0; i < argc; ++i) {
-		argv[i] = coco_string_create(argv_[i]);
+		argv[i] = CocoUtil::coco_string_create(argv_[i]);
 	}
 #else
 #error unknown compiler!
@@ -63,41 +63,37 @@ int main(int argc, char *argv_[]) {
 
 	wprintf(L"Coco/R (Jan 02, 2012)\n");
 
-	wchar_t *srcName = NULL, *nsName = NULL, *frameDir = NULL, *ddtString = NULL, *traceFileName = NULL;
-	wchar_t *outDir = NULL;
-	char *chTrFileName = NULL;
+	std::wstring srcName = NULL, nsName = NULL, frameDir = NULL, ddtString = NULL, traceFileName = NULL;
+	std::wstring outDir = NULL;
+	std::string chTrFileName = NULL;
 	bool emitLines = false;
 
 	for (int i = 1; i < argc; i++) {
-		if (coco_string_equal(argv[i], L"-namespace") && i < argc - 1) nsName = coco_string_create(argv[++i]);
-		else if (coco_string_equal(argv[i], L"-frames") && i < argc - 1) frameDir = coco_string_create(argv[++i]);
-		else if (coco_string_equal(argv[i], L"-trace") && i < argc - 1) ddtString = coco_string_create(argv[++i]);
-		else if (coco_string_equal(argv[i], L"-o") && i < argc - 1) outDir = coco_string_create_append(argv[++i], L"/");
-		else if (coco_string_equal(argv[i], L"-lines")) emitLines = true;
-		else srcName = coco_string_create(argv[i]);
+		if (CocoUtil::coco_string_equal(argv[i], L"-namespace") && i < argc - 1) nsName = CocoUtil::coco_string_create(argv[++i]);
+		else if (CocoUtil::coco_string_equal(argv[i], L"-frames") && i < argc - 1) frameDir = CocoUtil::coco_string_create(argv[++i]);
+		else if (CocoUtil::coco_string_equal(argv[i], L"-trace") && i < argc - 1) ddtString = CocoUtil::coco_string_create(argv[++i]);
+		else if (CocoUtil::coco_string_equal(argv[i], L"-o") && i < argc - 1) outDir = CocoUtil::coco_string_create_append(argv[++i], L"/");
+		else if (CocoUtil::coco_string_equal(argv[i], L"-lines")) emitLines = true;
+		else srcName = CocoUtil::coco_string_create(argv[i]);
 	}
 
 #if defined __GNUC__
-	for (int i = 0; i < argc; ++i) {
-		coco_string_delete(argv[i]);
-	}
-	delete [] argv; argv = NULL;
 #endif
 
-	if (argc > 0 && srcName != NULL) {
-		int pos = coco_string_lastindexof(srcName, '/');
-		if (pos < 0) pos = coco_string_lastindexof(srcName, '\\');
-		wchar_t* file = coco_string_create(srcName);
-		wchar_t* srcDir = coco_string_create(srcName, 0, pos+1);
+	if (argc > 0) {
+		int pos = CocoUtil::coco_string_lastindexof(srcName, '/');
+		if (pos < 0) pos = CocoUtil::coco_string_lastindexof(srcName, '\\');
+		std::wstring file = CocoUtil::coco_string_create(srcName);
+		std::wstring srcDir = CocoUtil::coco_string_create(srcName, 0, pos+1);
 
-		Coco::Scanner *scanner = new Coco::Scanner(file);
-		Coco::Parser  *parser  = new Coco::Parser(scanner);
+		std::shared_ptr<Coco::Scanner> scanner ( new Coco::Scanner(file.c_str()) );
+		Coco::Parser* parser  ( new Coco::Parser(scanner) );
 
-		traceFileName = coco_string_create_append(srcDir, L"trace.txt");
-		chTrFileName = coco_string_create_char(traceFileName);
+		traceFileName = CocoUtil::coco_string_create_append(srcDir, L"trace.txt");
+		chTrFileName = CocoUtil::coco_string_create_char(traceFileName);
 
-		if ((parser->trace = fopen(chTrFileName, "w")) == NULL) {
-			wprintf(L"-- could not open %hs\n", chTrFileName);
+		if ((parser->trace = fopen(chTrFileName.c_str(), "w")) == NULL) {
+			wprintf(L"-- could not open %hs\n", chTrFileName.c_str());
 			exit(1);
 		}
 
@@ -105,28 +101,28 @@ int main(int argc, char *argv_[]) {
 		parser->dfa  = new Coco::DFA(parser);
 		parser->pgen = new Coco::ParserGen(parser);
 
-		parser->tab->srcName  = coco_string_create(srcName);
-		parser->tab->srcDir   = coco_string_create(srcDir);
-		parser->tab->nsName   = nsName ? coco_string_create(nsName) : NULL;
-		parser->tab->frameDir = coco_string_create(frameDir);
-		parser->tab->outDir   = coco_string_create(outDir != NULL ? outDir : srcDir);
+		parser->tab->srcName  = CocoUtil::coco_string_create(srcName);
+		parser->tab->srcDir   = CocoUtil::coco_string_create(srcDir);
+		parser->tab->nsName   = CocoUtil::coco_string_create(nsName);
+		parser->tab->frameDir = CocoUtil::coco_string_create(frameDir);
+		parser->tab->outDir   = CocoUtil::coco_string_create(outDir.length() != 0 ? outDir : srcDir);
 		parser->tab->emitLines = emitLines;
 
-		if (ddtString != NULL) parser->tab->SetDDT(ddtString);
+		if (ddtString.length() != 0) parser->tab->SetDDT(ddtString);
 
 		parser->Parse();
 
 		fclose(parser->trace);
 
 		// obtain the FileSize
-		parser->trace = fopen(chTrFileName, "r");
+		parser->trace = fopen(chTrFileName.c_str(), "r");
 		fseek(parser->trace, 0, SEEK_END);
 		long fileSize = ftell(parser->trace);
 		fclose(parser->trace);
 		if (fileSize == 0) {
-			remove(chTrFileName);
+			remove(chTrFileName.c_str());
 		} else {
-			wprintf(L"trace output is in %hs\n", chTrFileName);
+			wprintf(L"trace output is in %hs\n", chTrFileName.c_str());
 		}
 
 		wprintf(L"%d errors detected\n", parser->errors->count);
@@ -138,9 +134,6 @@ int main(int argc, char *argv_[]) {
 		delete parser->dfa;
 		delete parser->tab;
 		delete parser;
-		delete scanner;
-		coco_string_delete(file);
-		coco_string_delete(srcDir);
 	} else {
 		wprintf(L"Usage: Coco Grammar.ATG {Option}\n");
 		wprintf(L"Options:\n");
@@ -162,12 +155,6 @@ int main(int argc, char *argv_[]) {
 		wprintf(L"or in a directory specified in the -frames option.\n");
 	}
 
-	coco_string_delete(srcName);
-	coco_string_delete(nsName);
-	coco_string_delete(frameDir);
-	coco_string_delete(ddtString);
-	coco_string_delete(chTrFileName);
-	coco_string_delete(traceFileName);
 
 	return 0;
 }

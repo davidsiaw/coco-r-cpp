@@ -29,6 +29,7 @@ Coco/R itself) does not fall under the GNU General Public License.
 #if !defined(COCO_CHARSET_H__)
 #define COCO_CHARSET_H__
 
+#include <string>
 #include <stdio.h>
 
 namespace Coco {

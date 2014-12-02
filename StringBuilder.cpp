@@ -32,57 +32,27 @@ Coco/R itself) does not fall under the GNU General Public License.
 
 namespace Coco {
 
-void StringBuilder::Init(int capacity) {
-	length = 0;
-	this->capacity = capacity;
-	data = new wchar_t[capacity + 1];
-	data[0] = 0;	
+StringBuilder::StringBuilder() {
 }
 
-StringBuilder::StringBuilder(int capacity) {
-	Init(capacity);
-}
-
-StringBuilder::StringBuilder(const wchar_t *val) {
-	capacity = length = wcslen(val);
-	Init(capacity);
-	wcscpy(data, val);
+StringBuilder::StringBuilder(const std::wstring val) {
+	data << val;
 }
 
 StringBuilder::~StringBuilder() {
-	if (data != NULL) {
-		delete [] data;
-		data = NULL;
-		length = 0;
-		capacity = 0;
-	}
 }
 
 void StringBuilder::Append(const wchar_t value) {
-	if (length == capacity) {
-		int oldCap = capacity;
-		capacity = capacity * 2;
-		wchar_t *nData = new wchar_t[capacity + 1];
-		memcpy(nData, data, oldCap * sizeof(int));
-		delete [] data;
-		data = nData;
-	}
-	
-	data[length] = value;
-	length++;
-	data[length] = '\0';
+	data << value;
 }
 
-void StringBuilder::Append(const wchar_t *value) {
-	if (length + (int)wcslen(value) < capacity) {
-		wcscpy(data + length, value);
-		length += wcslen(value);
-	}
+void StringBuilder::Append(const std::wstring value) {
+	data << value;
 }
 
 
-wchar_t* StringBuilder::ToString() {
-	return coco_string_create(data);
+std::wstring StringBuilder::ToString() {
+	return data.str();
 }
 
 }; // namespace

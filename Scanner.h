@@ -30,17 +30,26 @@ Coco/R itself) does not fall under the GNU General Public License.
 #if !defined(Coco_COCO_SCANNER_H__)
 #define Coco_COCO_SCANNER_H__
 
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <memory>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
+#include <string>
 
 // io.h and fcntl are used to ensure binary read from streams on windows
 #if _MSC_VER >= 1300
 #include <io.h>
 #include <fcntl.h>
 #endif
+
+#define COCO_WCHAR_MAX 65535
+#define COCO_MIN_BUFFER_LENGTH 1024
+#define COCO_MAX_BUFFER_LENGTH (64*COCO_MIN_BUFFER_LENGTH)
+#define COCO_CPP_NAMESPACE_SEPARATOR L':'
 
 #if _MSC_VER >= 1400
 #define coco_swprintf swprintf_s
@@ -53,38 +62,148 @@ Coco/R itself) does not fall under the GNU General Public License.
 #define coco_swprintf swprintf
 #endif
 
-#define COCO_WCHAR_MAX 65535
-#define COCO_MIN_BUFFER_LENGTH 1024
-#define COCO_MAX_BUFFER_LENGTH (64*COCO_MIN_BUFFER_LENGTH)
-#define COCO_HEAP_BLOCK_SIZE (64*1024)
-#define COCO_CPP_NAMESPACE_SEPARATOR L':'
-
 namespace Coco {
 
 
 // string handling, wide character
-wchar_t* coco_string_create(const wchar_t *value);
-wchar_t* coco_string_create(const wchar_t *value, int startIndex);
-wchar_t* coco_string_create(const wchar_t *value, int startIndex, int length);
-wchar_t* coco_string_create_upper(const wchar_t* data);
-wchar_t* coco_string_create_lower(const wchar_t* data);
-wchar_t* coco_string_create_lower(const wchar_t* data, int startIndex, int dataLen);
-wchar_t* coco_string_create_append(const wchar_t* data1, const wchar_t* data2);
-wchar_t* coco_string_create_append(const wchar_t* data, const wchar_t value);
-void  coco_string_delete(wchar_t* &data);
-int   coco_string_length(const wchar_t* data);
-bool  coco_string_endswith(const wchar_t* data, const wchar_t *value);
-int   coco_string_indexof(const wchar_t* data, const wchar_t value);
-int   coco_string_lastindexof(const wchar_t* data, const wchar_t value);
-void  coco_string_merge(wchar_t* &data, const wchar_t* value);
-bool  coco_string_equal(const wchar_t* data1, const wchar_t* data2);
-int   coco_string_compareto(const wchar_t* data1, const wchar_t* data2);
-int   coco_string_hash(const wchar_t* data);
+class CocoUtil
+{
+public:
 
-// string handling, ascii character
-wchar_t* coco_string_create(const char *value);
-char* coco_string_create_char(const wchar_t *value);
-void  coco_string_delete(char* &data);
+	// string handling, wide character
+
+	static std::wstring coco_string_create(const std::wstring value) {
+		return coco_string_create(value, 0);
+	}
+
+	static std::wstring coco_string_create(const std::wstring value, int startIndex) {
+		int valueLen = 0;
+		int len = 0;
+
+		valueLen = value.length();
+		len = valueLen - startIndex;
+
+		return coco_string_create(value, startIndex, len);
+	}
+
+	static std::wstring coco_string_create(const std::wstring value, int startIndex, int length) {
+		return value.substr(startIndex, length);
+	}
+
+	static std::wstring coco_string_create_upper(const std::wstring data) {
+		int dataLen = data.length();
+
+		std::wstring newData;
+		newData.resize(dataLen);
+
+		for (int i = 0; i <= dataLen; i++) {
+			if ((L'a' <= data[i]) && (data[i] <= L'z')) {
+				newData[i] = data[i] + (L'A' - L'a');
+			}
+			else { newData[i] = data[i]; }
+		}
+
+		return newData;
+	}
+
+	static std::wstring coco_string_create_lower(const std::wstring data) {
+		int dataLen = data.length();
+		return coco_string_create_lower(data, 0, dataLen);
+	}
+
+	static std::wstring coco_string_create_lower(const std::wstring data, int startIndex, int dataLen) {
+
+		std::wstring newData;
+		newData.resize(dataLen);
+
+		for (int i = 0; i <= dataLen; i++) {
+			wchar_t ch = data[startIndex + i];
+			if ((L'A' <= ch) && (ch <= L'Z')) {
+				newData[i] = ch - (L'A' - L'a');
+			}
+			else { newData[i] = ch; }
+		}
+
+		return newData;
+	}
+
+	static std::wstring coco_string_create_append(const std::wstring data1, const std::wstring data2) {
+		return data1 + data2;
+	}
+
+	static std::wstring coco_string_create_append(const wchar_t *target, const wchar_t appendix) {
+		return target + appendix;
+	}
+
+	static void coco_string_delete(std::wstring &data) {
+	}
+
+	static int coco_string_length(const std::wstring data) {
+		return data.length();
+	}
+
+	static bool coco_string_endswith(const std::wstring data, const std::wstring end) {
+		int dataLen = data.length();
+		int endLen = end.length();
+		return (endLen <= dataLen) && (wcscmp(data.c_str() + dataLen - endLen, end.c_str()) == 0);
+	}
+
+	static int coco_string_indexof(const std::wstring data, const wchar_t value) {
+		const wchar_t* chr = wcschr(data.c_str(), value);
+
+		if (chr) { return (chr-data.c_str()); }
+		return -1;
+	}
+
+	static int coco_string_lastindexof(const std::wstring data, const wchar_t value) {
+		const wchar_t* chr = wcsrchr(data.c_str(), value);
+
+		if (chr) { return (chr-data.c_str()); }
+		return -1;
+	}
+
+	static void coco_string_merge(std::wstring &target, const std::wstring appendix) {
+		target = target + appendix;
+	}
+
+	static bool coco_string_equal(const std::wstring data1, const std::wstring data2) {
+		return wcscmp( data1.c_str(), data2.c_str() ) == 0;
+	}
+
+	static int coco_string_compareto(const std::wstring data1, const std::wstring data2) {
+		return wcscmp(data1.c_str(), data2.c_str());
+	}
+
+	static int coco_string_hash(const std::wstring str) {
+		int h = 0;
+
+		const wchar_t* data = str.c_str();
+
+		while (*data != 0) {
+			h = (h * 7) ^ *data;
+			++data;
+		}
+		if (h < 0) { h = -h; }
+		return h;
+	}
+
+	// string handling, ascii character
+
+	static std::wstring coco_string_create(const std::string value) {
+		std::wstring data(value.begin(), value.end());
+		return data;
+	}
+
+	static std::string coco_string_create_char(const std::wstring value) {
+		std::string res(value.begin(), value.end());
+		return res;
+	}
+
+	static void coco_string_delete(std::string &data) {
+		data = "";
+	}
+};
+
 
 
 class Token  
@@ -95,11 +214,19 @@ public:
 	int charPos;  // token position in characters in the source text (starting at 0)
 	int col;      // token column (starting at 1)
 	int line;     // token line (starting at 1)
-	wchar_t* val; // token value
-	Token *next;  // ML 2005-03-11 Peek tokens are kept in linked list
+	std::wstring val; // token value
+	std::shared_ptr<Token> next;  // ML 2005-03-11 Peek tokens are kept in linked list
 
-	Token();
-	~Token();
+	Token() : next() {
+		kind = 0;
+		pos  = 0;
+		col  = 0;
+		line = 0;
+		charPos = 0;
+	}
+
+	~Token() {
+	}
 };
 
 class Buffer {
@@ -118,29 +245,199 @@ private:
 	FILE* stream;       // input stream (seekable)
 	bool isUserStream;  // was the stream opened by the user?
 	
-	int ReadNextStreamChunk();
-	bool CanSeek();     // true if stream can be seeked otherwise false
+	// Read the next chunk of bytes from the stream, increases the buffer
+	// if needed and updates the fields fileLen and bufLen.
+	// Returns the number of bytes read.
+	int ReadNextStreamChunk() {
+		int free = bufCapacity - bufLen;
+		if (free == 0) {
+			// in the case of a growing input stream
+			// we can neither seek in the stream, nor can we
+			// foresee the maximum length, thus we must adapt
+			// the buffer size on demand.
+			bufCapacity = bufLen * 2;
+			unsigned char *newBuf = new unsigned char[bufCapacity];
+			memcpy(newBuf, buf, bufLen*sizeof(unsigned char));
+			delete [] buf;
+			buf = newBuf;
+			free = bufLen;
+		}
+		int read = fread(buf + bufLen, sizeof(unsigned char), free, stream);
+		if (read > 0) {
+			fileLen = bufLen = (bufLen + read);
+			return read;
+		}
+		// end of stream reached
+		return 0;
+	}
+
+	bool CanSeek() {
+		return (stream != NULL) && (ftell(stream) != -1);
+	}
 	
 public:
 	static const int EoF = COCO_WCHAR_MAX + 1;
 
-	Buffer(FILE* s, bool isUserStream);
-	Buffer(const unsigned char* buf, int len);
-	Buffer(Buffer *b);
-	virtual ~Buffer();
-	
-	virtual void Close();
-	virtual int Read();
-	virtual int Peek();
-	virtual wchar_t* GetString(int beg, int end);
-	virtual int GetPos();
-	virtual void SetPos(int value);
+	Buffer(FILE* s, bool isUserStream) {
+	// ensure binary read on windows
+	#if _MSC_VER >= 1300
+		_setmode(_fileno(s), _O_BINARY);
+	#endif
+		stream = s; this->isUserStream = isUserStream;
+		if (CanSeek()) {
+			fseek(s, 0, SEEK_END);
+			fileLen = ftell(s);
+			fseek(s, 0, SEEK_SET);
+			bufLen = (fileLen < COCO_MAX_BUFFER_LENGTH) ? fileLen : COCO_MAX_BUFFER_LENGTH;
+			bufStart = INT_MAX; // nothing in the buffer so far
+		} else {
+			fileLen = bufLen = bufStart = 0;
+		}
+		bufCapacity = (bufLen>0) ? bufLen : COCO_MIN_BUFFER_LENGTH;
+		buf = new unsigned char[bufCapacity];	
+		if (fileLen > 0) SetPos(0);          // setup  buffer to position 0 (start)
+		else bufPos = 0; // index 0 is already after the file, thus Pos = 0 is invalid
+		if (bufLen == fileLen && CanSeek()) Close();
+	}
+
+	Buffer(Buffer *b) {
+		buf = b->buf;
+		bufCapacity = b->bufCapacity;
+		b->buf = NULL;
+		bufStart = b->bufStart;
+		bufLen = b->bufLen;
+		fileLen = b->fileLen;
+		bufPos = b->bufPos;
+		stream = b->stream;
+		b->stream = NULL;
+		isUserStream = b->isUserStream;
+	}
+
+	Buffer(const unsigned char* buf, int len) {
+		this->buf = new unsigned char[len];
+		memcpy(this->buf, buf, len*sizeof(unsigned char));
+		bufStart = 0;
+		bufCapacity = bufLen = len;
+		fileLen = len;
+		bufPos = 0;
+		stream = NULL;
+		isUserStream = true;
+	}
+
+	virtual ~Buffer() {
+		Close(); 
+		if (buf != NULL) {
+			delete [] buf;
+			buf = NULL;
+		}
+	}
+
+	virtual void Close() {
+		if (!isUserStream && stream != NULL) {
+			fclose(stream);
+			stream = NULL;
+		}
+	}
+
+	virtual int Read() {
+		if (bufPos < bufLen) {
+			return buf[bufPos++];
+		} else if (GetPos() < fileLen) {
+			SetPos(GetPos()); // shift buffer start to Pos
+			return buf[bufPos++];
+		} else if ((stream != NULL) && !CanSeek() && (ReadNextStreamChunk() > 0)) {
+			return buf[bufPos++];
+		} else {
+			return EoF;
+		}
+	}
+
+	virtual int Peek() {
+		int curPos = GetPos();
+		int ch = Read();
+		SetPos(curPos);
+		return ch;
+	}
+
+	// beg .. begin, zero-based, inclusive, in byte
+	// end .. end, zero-based, exclusive, in byte
+	virtual std::wstring GetString(int beg, int end) {
+
+		std::wstringstream ss;
+
+		int oldPos = GetPos();
+		SetPos(beg);
+		while (GetPos() < end) {
+			ss << Read();
+		}
+		SetPos(oldPos);
+		return ss.str();
+	}
+
+	virtual int GetPos() {
+		return bufPos + bufStart;
+	}
+
+	virtual void SetPos(int value) {
+		if ((value >= fileLen) && (stream != NULL) && !CanSeek()) {
+			// Wanted position is after buffer and the stream
+			// is not seek-able e.g. network or console,
+			// thus we have to read the stream manually till
+			// the wanted position is in sight.
+			while ((value >= fileLen) && (ReadNextStreamChunk() > 0));
+		}
+
+		if ((value < 0) || (value > fileLen)) {
+			fwprintf(stderr, L"--- buffer out of bounds access, position: %d\n", value);
+			exit(1);
+		}
+
+		if ((value >= bufStart) && (value < (bufStart + bufLen))) { // already in buffer
+			bufPos = value - bufStart;
+		} else if (stream != NULL) { // must be swapped in
+			fseek(stream, value, SEEK_SET);
+			bufLen = fread(buf, sizeof(unsigned char), bufCapacity, stream);
+			bufStart = value; bufPos = 0;
+		} else {
+			bufPos = fileLen - bufStart; // make Pos return fileLen
+		}
+	}
+
 };
 
 class UTF8Buffer : public Buffer {
 public:
 	UTF8Buffer(Buffer *b) : Buffer(b) {};
-	virtual int Read();
+	virtual int Read() {
+		int ch;
+		do {
+			ch = Buffer::Read();
+			// until we find a utf8 start (0xxxxxxx or 11xxxxxx)
+		} while ((ch >= 128) && ((ch & 0xC0) != 0xC0) && (ch != EoF));
+		if (ch < 128 || ch == EoF) {
+			// nothing to do, first 127 chars are the same in ascii and utf8
+			// 0xxxxxxx or end of file character
+		} else if ((ch & 0xF0) == 0xF0) {
+			// 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+			int c1 = ch & 0x07; ch = Buffer::Read();
+			int c2 = ch & 0x3F; ch = Buffer::Read();
+			int c3 = ch & 0x3F; ch = Buffer::Read();
+			int c4 = ch & 0x3F;
+			ch = (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
+		} else if ((ch & 0xE0) == 0xE0) {
+			// 1110xxxx 10xxxxxx 10xxxxxx
+			int c1 = ch & 0x0F; ch = Buffer::Read();
+			int c2 = ch & 0x3F; ch = Buffer::Read();
+			int c3 = ch & 0x3F;
+			ch = (((c1 << 6) | c2) << 6) | c3;
+		} else if ((ch & 0xC0) == 0xC0) {
+			// 110xxxxx 10xxxxxx
+			int c1 = ch & 0x1F; ch = Buffer::Read();
+			int c2 = ch & 0x3F;
+			ch = (c1 << 6) | c2;
+		}
+		return ch;
+	}
 };
 
 //-----------------------------------------------------------------------------------
@@ -189,66 +486,48 @@ public:
 //-------------------------------------------------------------------------------------------
 class KeywordMap {
 private:
-	class Elem {
-	public:
-		wchar_t *key;
-		int val;
-		Elem *next;
-		Elem(const wchar_t *key, int val) { this->key = coco_string_create(key); this->val = val; next = NULL; }
-		virtual ~Elem() { coco_string_delete(key); }
-	};
-
-	Elem **tab;
+	std::map<std::wstring, int> map;
 
 public:
-	KeywordMap() { tab = new Elem*[128]; memset(tab, 0, 128 * sizeof(Elem*)); }
-	virtual ~KeywordMap() {
-		for (int i = 0; i < 128; ++i) {
-			Elem *e = tab[i];
-			while (e != NULL) {
-				Elem *next = e->next;
-				delete e;
-				e = next;
-			}
+	KeywordMap() { }
+	virtual ~KeywordMap() { }
+
+	void set(const std::wstring key, int val) {
+		map[key] = val;
+	}
+
+	int get(const std::wstring key, int defaultVal) const {
+		auto val = map.find(key);
+		if (map.find(key) != map.end()) {
+			return val->second;
 		}
-		delete [] tab;
-	}
-
-	void set(const wchar_t *key, int val) {
-		Elem *e = new Elem(key, val);
-		int k = coco_string_hash(key) % 128;
-		e->next = tab[k]; tab[k] = e;
-	}
-
-	int get(const wchar_t *key, int defaultVal) {
-		Elem *e = tab[coco_string_hash(key) % 128];
-		while (e != NULL && !coco_string_equal(e->key, key)) e = e->next;
-		return e == NULL ? defaultVal : e->val;
+		return defaultVal;
 	}
 };
 
 class Scanner {
 private:
-	void *firstHeap;
-	void *heap;
-	void *heapTop;
-	void **heapEnd;
+	class Heap {
+		std::shared_ptr<Token> token;
+		std::wstring str;
+		std::shared_ptr<Heap> next;
+	};
+
+	std::shared_ptr<Heap> heapTop;
 
 	unsigned char EOL;
 	int eofSym;
 	int noSym;
 	int maxT;
-	int charSetSize;
 	StartStates start;
 	KeywordMap keywords;
 
-	Token *t;         // current token
-	wchar_t *tval;    // text of current token
-	int tvalLength;   // length of text of current token
+	std::shared_ptr<Token> t;         // current token
+	std::wstring tval;    // text of current token
 	int tlen;         // length of current token
 
-	Token *tokens;    // list of tokens already peeked (first token is a dummy)
-	Token *pt;        // current peek token
+	std::shared_ptr<Token> tokens;    // list of tokens already peeked (first token is a dummy)
+	std::shared_ptr<Token> pt;        // current peek token
 
 	int ch;           // current input character
 
@@ -258,34 +537,379 @@ private:
 	int col;          // column number of current character
 	int oldEols;      // EOLs that appeared in a comment;
 
-	void CreateHeapBlock();
-	Token* CreateToken();
-	void AppendVal(Token *t);
-	void SetScannerBehindT();
 
-	void Init();
-	void NextCh();
-	void AddCh();
-	bool Comment0();
-	bool Comment1();
+	std::shared_ptr<Token> CreateToken() {
+		return std::shared_ptr<Token>(new Token());
+	}
 
-	Token* NextToken();
+	void AppendVal(std::shared_ptr<Token> t) {
+		t->val = tval.substr(0, tlen);
+	}
+
+
+	void SetScannerBehindT() {
+		buffer->SetPos(t->pos);
+		NextCh();
+		line = t->line; col = t->col; charPos = t->charPos;
+		for (int i = 0; i < tlen; i++) NextCh();
+	}
+
+	void Init() {
+		EOL    = '\n';
+		eofSym = 0;
+		maxT = 41;
+	noSym = 41;
+	int i;
+	for (i = 65; i <= 90; ++i) start.set(i, 1);
+	for (i = 95; i <= 95; ++i) start.set(i, 1);
+	for (i = 97; i <= 122; ++i) start.set(i, 1);
+	for (i = 48; i <= 57; ++i) start.set(i, 2);
+	start.set(34, 12);
+	start.set(39, 5);
+	start.set(36, 13);
+	start.set(61, 16);
+	start.set(46, 31);
+	start.set(43, 17);
+	start.set(45, 18);
+	start.set(60, 32);
+	start.set(62, 20);
+	start.set(124, 23);
+	start.set(40, 33);
+	start.set(41, 24);
+	start.set(91, 25);
+	start.set(93, 26);
+	start.set(123, 27);
+	start.set(125, 28);
+		start.set(Buffer::EoF, -1);
+	keywords.set(L"COMPILER", 6);
+	keywords.set(L"IGNORECASE", 7);
+	keywords.set(L"CHARACTERS", 8);
+	keywords.set(L"TOKENS", 9);
+	keywords.set(L"PRAGMAS", 10);
+	keywords.set(L"COMMENTS", 11);
+	keywords.set(L"FROM", 12);
+	keywords.set(L"TO", 13);
+	keywords.set(L"NESTED", 14);
+	keywords.set(L"IGNORE", 15);
+	keywords.set(L"PRODUCTIONS", 16);
+	keywords.set(L"END", 19);
+	keywords.set(L"ANY", 23);
+	keywords.set(L"WEAK", 29);
+	keywords.set(L"SYNC", 36);
+	keywords.set(L"IF", 37);
+	keywords.set(L"CONTEXT", 38);
+
+
+		pos = -1; line = 1; col = 0; charPos = -1;
+		oldEols = 0;
+		NextCh();
+		if (ch == 0xEF) { // check optional byte order mark for UTF-8
+			NextCh(); int ch1 = ch;
+			NextCh(); int ch2 = ch;
+			if (ch1 != 0xBB || ch2 != 0xBF) {
+				fwprintf(stderr, L"Illegal byte order mark at start of file");
+				exit(1);
+			}
+			Buffer *oldBuf = buffer;
+			buffer = new UTF8Buffer(buffer); col = 0; charPos = -1;
+			delete oldBuf; oldBuf = NULL;
+			NextCh();
+		}
+
+	
+		pt = tokens = CreateToken(); // first token is a dummy
+	}
+
+	void NextCh() {
+
+		if (oldEols > 0) { ch = EOL; oldEols--; }
+		else {
+			pos = buffer->GetPos();
+			// buffer reads unicode chars, if UTF8 has been detected
+			ch = buffer->Read(); col++; charPos++;
+			// replace isolated '\r' by '\n' in order to make
+			// eol handling uniform across Windows, Unix and Mac
+			if (ch == L'\r' && buffer->Peek() != L'\n') ch = EOL;
+			if (ch == EOL) { line++; col = 0; }
+		}
+	
+	}
+
+	void AddCh() {
+		if (tlen >= tval.length()) {
+			tval.resize(tval.length() * 2 + 1);
+		}
+		
+		if (ch != Buffer::EoF) {
+			tval[tlen++] = ch;
+			NextCh();
+		}
+	}
+
+
+
+	std::shared_ptr<Token> NextToken() {
+
+		while (ch == ' ' ||
+				(ch >= 9 && ch <= 10) || ch == 13
+		) NextCh();
+
+		if ((ch == L'/' && Comment0()) || (ch == L'/' && Comment1())) return NextToken();
+		int recKind = noSym;
+		int recEnd = pos;
+		t = CreateToken();
+		t->pos = pos; t->col = col; t->line = line; t->charPos = charPos;
+		int state = start.state(ch);
+		tlen = 0; AddCh();
+
+		switch (state) {
+			case -1: { t->kind = eofSym; break; } // NextCh already done
+			case 0: {
+				case_0:
+				if (recKind != noSym) {
+					tlen = recEnd - t->pos;
+					SetScannerBehindT();
+				}
+				t->kind = recKind; break;
+			} // NextCh already done
+			case 1:
+			case_1:
+			recEnd = pos; recKind = 1;
+			if ((ch >= L'0' && ch <= L'9') || (ch >= L'A' && ch <= L'Z') || ch == L'_' || (ch >= L'a' && ch <= L'z')) {AddCh(); goto case_1;}
+			else {t->kind = 1; std::wstring literal = CocoUtil::coco_string_create(tval.c_str(), 0, tlen); t->kind = keywords.get(literal, t->kind); CocoUtil::coco_string_delete(literal); break;}
+		case 2:
+			case_2:
+			recEnd = pos; recKind = 2;
+			if ((ch >= L'0' && ch <= L'9')) {AddCh(); goto case_2;}
+			else {t->kind = 2; break;}
+		case 3:
+			case_3:
+			{t->kind = 3; break;}
+		case 4:
+			case_4:
+			{t->kind = 4; break;}
+		case 5:
+			if (ch <= 9 || (ch >= 11 && ch <= 12) || (ch >= 14 && ch <= L'&') || (ch >= L'(' && ch <= L'[') || (ch >= L']' && ch <= 65535)) {AddCh(); goto case_6;}
+			else if (ch == 92) {AddCh(); goto case_7;}
+			else {goto case_0;}
+		case 6:
+			case_6:
+			if (ch == 39) {AddCh(); goto case_9;}
+			else {goto case_0;}
+		case 7:
+			case_7:
+			if ((ch >= L' ' && ch <= L'~')) {AddCh(); goto case_8;}
+			else {goto case_0;}
+		case 8:
+			case_8:
+			if ((ch >= L'0' && ch <= L'9') || (ch >= L'a' && ch <= L'f')) {AddCh(); goto case_8;}
+			else if (ch == 39) {AddCh(); goto case_9;}
+			else {goto case_0;}
+		case 9:
+			case_9:
+			{t->kind = 5; break;}
+		case 10:
+			case_10:
+			recEnd = pos; recKind = 42;
+			if ((ch >= L'0' && ch <= L'9') || (ch >= L'A' && ch <= L'Z') || ch == L'_' || (ch >= L'a' && ch <= L'z')) {AddCh(); goto case_10;}
+			else {t->kind = 42; break;}
+		case 11:
+			case_11:
+			recEnd = pos; recKind = 43;
+			if ((ch >= L'-' && ch <= L'.') || (ch >= L'0' && ch <= L':') || (ch >= L'A' && ch <= L'Z') || ch == L'_' || (ch >= L'a' && ch <= L'z')) {AddCh(); goto case_11;}
+			else {t->kind = 43; break;}
+		case 12:
+			case_12:
+			if (ch <= 9 || (ch >= 11 && ch <= 12) || (ch >= 14 && ch <= L'!') || (ch >= L'#' && ch <= L'[') || (ch >= L']' && ch <= 65535)) {AddCh(); goto case_12;}
+			else if (ch == 10 || ch == 13) {AddCh(); goto case_4;}
+			else if (ch == L'"') {AddCh(); goto case_3;}
+			else if (ch == 92) {AddCh(); goto case_14;}
+			else {goto case_0;}
+		case 13:
+			recEnd = pos; recKind = 42;
+			if ((ch >= L'0' && ch <= L'9')) {AddCh(); goto case_10;}
+			else if ((ch >= L'A' && ch <= L'Z') || ch == L'_' || (ch >= L'a' && ch <= L'z')) {AddCh(); goto case_15;}
+			else {t->kind = 42; break;}
+		case 14:
+			case_14:
+			if ((ch >= L' ' && ch <= L'~')) {AddCh(); goto case_12;}
+			else {goto case_0;}
+		case 15:
+			case_15:
+			recEnd = pos; recKind = 42;
+			if ((ch >= L'0' && ch <= L'9')) {AddCh(); goto case_10;}
+			else if ((ch >= L'A' && ch <= L'Z') || ch == L'_' || (ch >= L'a' && ch <= L'z')) {AddCh(); goto case_15;}
+			else if (ch == L'=') {AddCh(); goto case_11;}
+			else {t->kind = 42; break;}
+		case 16:
+			{t->kind = 17; break;}
+		case 17:
+			{t->kind = 20; break;}
+		case 18:
+			{t->kind = 21; break;}
+		case 19:
+			case_19:
+			{t->kind = 22; break;}
+		case 20:
+			{t->kind = 25; break;}
+		case 21:
+			case_21:
+			{t->kind = 26; break;}
+		case 22:
+			case_22:
+			{t->kind = 27; break;}
+		case 23:
+			{t->kind = 28; break;}
+		case 24:
+			{t->kind = 31; break;}
+		case 25:
+			{t->kind = 32; break;}
+		case 26:
+			{t->kind = 33; break;}
+		case 27:
+			{t->kind = 34; break;}
+		case 28:
+			{t->kind = 35; break;}
+		case 29:
+			case_29:
+			{t->kind = 39; break;}
+		case 30:
+			case_30:
+			{t->kind = 40; break;}
+		case 31:
+			recEnd = pos; recKind = 18;
+			if (ch == L'.') {AddCh(); goto case_19;}
+			else if (ch == L'>') {AddCh(); goto case_22;}
+			else if (ch == L')') {AddCh(); goto case_30;}
+			else {t->kind = 18; break;}
+		case 32:
+			recEnd = pos; recKind = 24;
+			if (ch == L'.') {AddCh(); goto case_21;}
+			else {t->kind = 24; break;}
+		case 33:
+			recEnd = pos; recKind = 30;
+			if (ch == L'.') {AddCh(); goto case_29;}
+			else {t->kind = 30; break;}
+
+		}
+
+
+		AppendVal(t);
+		return t;
+	}
 
 public:
 	Buffer *buffer;   // scanner buffer
+
+	Scanner(const unsigned char* buf, int len) {
+		buffer = new Buffer(buf, len);
+		Init();
+	}
+
+	Scanner(const wchar_t* fileName) {
+		FILE* stream;
+		std::string chFileName = CocoUtil::coco_string_create_char(fileName);
+		if ((stream = fopen(chFileName.c_str(), "rb")) == NULL) {
+			fwprintf(stderr, L"--- Cannot open file %ls\n", fileName);
+			exit(1);
+		}
+		CocoUtil::coco_string_delete(chFileName);
+		buffer = new Buffer(stream, false);
+		Init();
+	}
+
+	Scanner(FILE* s) {
+		buffer = new Buffer(s, true);
+		Init();
+	}
+
+	~Scanner() {
+		delete buffer;
+	}
+
+
 	
-	Scanner(const unsigned char* buf, int len);
-	Scanner(const wchar_t* fileName);
-	Scanner(FILE* s);
-	~Scanner();
-	Token* Scan();
-	Token* Peek();
-	void ResetPeek();
+bool Comment0() {
+	int level = 1, pos0 = pos, line0 = line, col0 = col, charPos0 = charPos;
+	NextCh();
+	if (ch == L'/') {
+		NextCh();
+		for(;;) {
+			if (ch == 10) {
+				level--;
+				if (level == 0) { oldEols = line - line0; NextCh(); return true; }
+				NextCh();
+			} else if (ch == buffer->EoF) return false;
+			else NextCh();
+		}
+	} else {
+		buffer->SetPos(pos0); NextCh(); line = line0; col = col0; charPos = charPos0;
+	}
+	return false;
+}
+
+bool Comment1() {
+	int level = 1, pos0 = pos, line0 = line, col0 = col, charPos0 = charPos;
+	NextCh();
+	if (ch == L'*') {
+		NextCh();
+		for(;;) {
+			if (ch == L'*') {
+				NextCh();
+				if (ch == L'/') {
+					level--;
+					if (level == 0) { oldEols = line - line0; NextCh(); return true; }
+					NextCh();
+				}
+			} else if (ch == L'/') {
+				NextCh();
+				if (ch == L'*') {
+					level++; NextCh();
+				}
+			} else if (ch == buffer->EoF) return false;
+			else NextCh();
+		}
+	} else {
+		buffer->SetPos(pos0); NextCh(); line = line0; col = col0; charPos = charPos0;
+	}
+	return false;
+}
+
+
+
+
+	// get the next token (possibly a token already seen during peeking)
+	std::shared_ptr<Token> Scan() {
+
+		if (!tokens->next) {
+			pt = tokens = NextToken();
+		} else {
+			pt = tokens = tokens->next;
+		}
+
+		std::wcerr << tokens->val << std::endl;
+		return tokens;
+	}
+
+	// peek for the next token, ignore pragmas
+	std::shared_ptr<Token> Peek() {
+		do {
+			if (!pt->next) {
+				pt->next = NextToken();
+			}
+			pt = pt->next;
+		} while (pt->kind > maxT); // skip pragmas
+
+		return pt;
+	}
+
+	// make sure that peeking starts at the current scan position
+	void ResetPeek() {
+		pt = tokens;
+	}
 
 }; // end Scanner
 
-} // namespace
-
+}; // namespace
 
 #endif
-

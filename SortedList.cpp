@@ -33,7 +33,7 @@ Coco/R itself) does not fall under the GNU General Public License.
 namespace Coco {
 
 int Compare(Symbol *x, Symbol *y) {
-	return coco_string_compareto(x->name, y->name);
+	return CocoUtil::coco_string_compareto(x->name, y->name);
 }
 
 SortedEntry::SortedEntry(Symbol* Key, void* Value) {

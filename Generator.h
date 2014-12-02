@@ -37,22 +37,22 @@ namespace Coco {
 
 class Generator {
 public:
-	Generator(Tab *tab, Errors *errors);
-	FILE* OpenFrame(const wchar_t* frame);
-	FILE* OpenGen(const wchar_t *genName);
+	Generator(Tab *tab, std::shared_ptr<Errors> errors);
+	FILE* OpenFrame(const std::wstring frame);
+	FILE* OpenGen(const std::wstring genName);
 	void GenCopyright();
 	void GenPrefixFromNamespace();
-	void SkipFramePart(const wchar_t *stop);
-	void CopyFramePart(const wchar_t *stop);
+	void SkipFramePart(const std::wstring stop);
+	void CopyFramePart(const std::wstring stop);
 
 private:
 	FILE* fram;
 	FILE* gen;
 	Tab *tab;
-	wchar_t* frameFile;
-	Errors *errors;
+	std::wstring frameFile;
+	std::shared_ptr<Errors> errors;
 
-	void CopyFramePart(const wchar_t* stop, bool generateOutput);
+	void CopyFramePart(const std::wstring stop, bool generateOutput);
 
 };
 

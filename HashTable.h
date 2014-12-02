@@ -29,13 +29,13 @@ Coco/R itself) does not fall under the GNU General Public License.
 #if !defined(COCO_HASHTABLE_H__)
 #define COCO_HASHTABLE_H__
 
-#include <wchar.h>
+#include <string>
 
 namespace Coco {
 
 class DictionaryEntry {
 public:
-	wchar_t *key;
+	std::wstring key;
 	void *val;
 };
 
@@ -51,9 +51,9 @@ public:
 	HashTable(int size = 128);
 	virtual ~HashTable();
 	
-	virtual void Set(wchar_t *key, void *value);
-	virtual void* Get(wchar_t *key) const;
-	inline void* operator[](wchar_t *key) const { return Get(key); };
+	virtual void Set(std::wstring key, void *value);
+	virtual void* Get(std::wstring key) const;
+	inline void* operator[](std::wstring key) const { return Get(key); };
 	virtual Iterator* GetIterator();
 
 private:
@@ -74,7 +74,7 @@ private:
 		virtual DictionaryEntry* Next();
 	};
 	
-	Obj* Get0(wchar_t *key) const;
+	Obj* Get0(std::wstring key) const;
 	Obj **data;
 	int size;
 };

@@ -65,15 +65,15 @@ public:
 
 	Parser     *parser;        // other Coco objects
 	Tab        *tab;
-	Errors     *errors;
+	std::shared_ptr<Errors>     errors;
 	FILE* trace;
 
 	Melted *firstMelted;	// head of melted state list
 	Comment *firstComment;	// list of comments
 
 	//---------- Output primitives
-	wchar_t* Ch(wchar_t ch);
-	wchar_t* ChCond(wchar_t ch);
+	std::wstring Ch(wchar_t ch);
+	std::wstring ChCond(wchar_t ch);
 	void  PutRange(CharSet *s);
 
 	//---------- State handling
@@ -88,7 +88,7 @@ public:
 	void FindTrans (Node *p, bool start, BitArray *marked);
 	void ConvertToStates(Node *p, Symbol *sym);
 	// match string against current automaton; store it either as a fixedToken or as a litToken
-	void MatchLiteral(wchar_t* s, Symbol *sym);
+	void MatchLiteral(std::wstring s, Symbol *sym);
 	void SplitActions(State *state, Action *a, Action *b);
 	bool Overlap(Action *a, Action *b);
 	bool MakeUnique(State *state); // return true if actions were split
@@ -108,21 +108,21 @@ public:
 	Melted* StateWithSet(BitArray *s);
 
 	//------------------------ comments --------------------------------
-	wchar_t* CommentStr(Node *p);
+	std::wstring CommentStr(Node *p);
 	void NewComment(Node *from, Node *to, bool nested);
 
 	//------------------------ scanner generation ----------------------
 	void GenComBody(Comment *com);
 	void GenCommentHeader(Comment *com, int i);
 	void GenComment(Comment *com, int i);
-	void CopyFramePart(const wchar_t* stop);
-	wchar_t* SymName(Symbol *sym); // real name value is stored in Tab.literals
+	void CopyFramePart(const std::wstring stop);
+	std::wstring SymName(Symbol *sym); // real name value is stored in Tab.literals
 	void GenLiterals ();
-	int GenNamespaceOpen(const wchar_t* nsName);
+	int GenNamespaceOpen(const std::wstring nsName);
 	void GenNamespaceClose(int nrOfNs);
 	void WriteState(State *state);
 	void WriteStartTab();
-	void OpenGen(const wchar_t* genName, bool backUp); /* pdt */
+	void OpenGen(const std::wstring genName, bool backUp); /* pdt */
 	void WriteScanner();
 	DFA(Parser *parser);
 };

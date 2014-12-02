@@ -52,20 +52,20 @@ HashTable::~HashTable() {
 	data = NULL;
 };
 
-HashTable::Obj* HashTable::Get0(wchar_t *key) const {
-	int k = coco_string_hash(key) % size;
+HashTable::Obj* HashTable::Get0(std::wstring key) const {
+	int k = CocoUtil::coco_string_hash(key) % size;
 	HashTable::Obj *o = data[k];
-	while (o != NULL && !coco_string_equal(key, o->key)) {
+	while (o != NULL && !CocoUtil::coco_string_equal(key, o->key)) {
 		o = o->next;
 	}
 	return o;
 }
 
-void HashTable::Set(wchar_t *key, void *val) {
+void HashTable::Set(std::wstring key, void *val) {
 	HashTable::Obj *o = Get0(key);
 	if (o == NULL) {
 		// new entry
-		int k = coco_string_hash(key) % size;
+		int k = CocoUtil::coco_string_hash(key) % size;
 		o = new Obj();
 		o->key = key;
 		o->val = val;
@@ -77,7 +77,7 @@ void HashTable::Set(wchar_t *key, void *val) {
 	}
 }
 
-void* HashTable::Get(wchar_t *key) const {
+void* HashTable::Get(std::wstring key) const {
 	HashTable::Obj *o = Get0(key);
 	if (o != NULL) {
 		return o->val;

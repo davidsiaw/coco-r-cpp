@@ -1,27 +1,26 @@
 #if !defined(COCO_STRINGBUILDER_H__)
 #define COCO_STRINGBUILDER_H__
 
-#include<stddef.h>
+#include <stddef.h>
+#include <string>
+#include <sstream>
 
 namespace Coco {
 
 class StringBuilder  
 {
 public:
-	StringBuilder(int capacity = 32);
-	StringBuilder(const wchar_t *val);
-	
+	StringBuilder();
+	StringBuilder(std::wstring val);
+
 	virtual ~StringBuilder();
 	void Append(const wchar_t val);
-	void Append(const wchar_t *val);
-	wchar_t* ToString();
-	int GetLength() { return length; };
+	void Append(const std::wstring val);
+	std::wstring ToString();
+	int GetLength() { return data.str().length(); };
 
 private:
-	void Init(int capacity);
-	wchar_t *data;
-	int capacity;
-	int length;
+	std::wstringstream data;
 };
 
 }; // namespace
