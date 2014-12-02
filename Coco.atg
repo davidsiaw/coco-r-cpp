@@ -105,7 +105,7 @@ IGNORE cr + lf + tab
 
 PRODUCTIONS
 
-Coco                            (. Symbol *sym; Graph *g, *g1, *g2; std::wstring gramName = NULL; CharSet *s; .)
+Coco                            (. Symbol *sym; Graph *g, *g1, *g2; std::wstring gramName; CharSet *s; .)
 =
                                 (. int beg = la->pos; int line = la->line; .)
   { // this section can be used
@@ -271,7 +271,7 @@ Char<int &n>
 
 /*------------------------------------------------------------------------------------*/
 
-TokenDecl<int typ>              (. std::wstring name = NULL; int kind; Symbol *sym; Graph *g; .)
+TokenDecl<int typ>              (. std::wstring name; int kind; Symbol *sym; Graph *g; .)
 =
   Sym<name, kind>               (. sym = tab->FindSym(name);
                                    if (sym != NULL) SemErr(L"name declared twice");
@@ -279,7 +279,7 @@ TokenDecl<int typ>              (. std::wstring name = NULL; int kind; Symbol *s
                                      sym = tab->NewSym(typ, name, t->line);
                                      sym->tokenKind = Symbol::fixedToken;
                                    }
-                                   tokenString = NULL;
+                                   tokenString;
                                  .)
   SYNC
   ( '=' TokenExpr<g> '.'        (. if (kind == str) SemErr(L"a literal must not be declared with a structure");
@@ -350,7 +350,7 @@ Term<Graph* &g>               (. Graph *g2; Node *rslv = NULL; g = NULL; .)
 
 /*------------------------------------------------------------------------------------*/
 
-Factor<Graph* &g>             (. std::wstring name = NULL; int kind; Position *pos; bool weak = false; 
+Factor<Graph* &g>             (. std::wstring name; int kind; Position *pos; bool weak = false; 
                                    g = NULL;
                                  .)
 =
@@ -446,7 +446,7 @@ TokenTerm<Graph* &g>        (. Graph *g2; .)
 
 /*------------------------------------------------------------------------------------*/
 
-TokenFactor<Graph* &g>        (. std::wstring name = NULL; int kind; .)
+TokenFactor<Graph* &g>        (. std::wstring name; int kind; .)
 =
                               (. g = NULL; .)
 ( Sym<name, kind>             (. if (kind == id) {

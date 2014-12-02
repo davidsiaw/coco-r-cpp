@@ -43,6 +43,7 @@ Coco/R itself) does not fall under the GNU General Public License.
 
 
 #include <stdio.h>
+#include <vector>
 #include "Scanner.h"
 #include "Parser.h"
 #include "Tab.h"
@@ -50,12 +51,13 @@ Coco/R itself) does not fall under the GNU General Public License.
 using namespace Coco;
 
 #ifdef _WIN32
-int wmain(int argc, std::wstring argv[]) {
+int wmain(int argc, wchar_t *argv_[]) {
 #elif defined __GNUC__
 int main(int argc, char *argv_[]) {
-	std::wstring * argv = new std::wstring[argc];
+
+	std::vector<std::wstring> argv;
 	for (int i = 0; i < argc; ++i) {
-		argv[i] = CocoUtil::coco_string_create(argv_[i]);
+		argv.push_back(CocoUtil::coco_string_create(argv_[i]));
 	}
 #else
 #error unknown compiler!
@@ -63,12 +65,12 @@ int main(int argc, char *argv_[]) {
 
 	wprintf(L"Coco/R (Jan 02, 2012)\n");
 
-	std::wstring srcName = NULL, nsName = NULL, frameDir = NULL, ddtString = NULL, traceFileName = NULL;
-	std::wstring outDir = NULL;
-	std::string chTrFileName = NULL;
+	std::wstring srcName, nsName, frameDir, ddtString, traceFileName;
+	std::wstring outDir;
+	std::string chTrFileName;
 	bool emitLines = false;
 
-	for (int i = 1; i < argc; i++) {
+	for (int i = 1; i < argv.size(); i++) {
 		if (CocoUtil::coco_string_equal(argv[i], L"-namespace") && i < argc - 1) nsName = CocoUtil::coco_string_create(argv[++i]);
 		else if (CocoUtil::coco_string_equal(argv[i], L"-frames") && i < argc - 1) frameDir = CocoUtil::coco_string_create(argv[++i]);
 		else if (CocoUtil::coco_string_equal(argv[i], L"-trace") && i < argc - 1) ddtString = CocoUtil::coco_string_create(argv[++i]);

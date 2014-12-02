@@ -215,7 +215,7 @@ private:
 
 
 	void Coco() {
-		Symbol *sym; Graph *g, *g1, *g2; std::wstring gramName = NULL; CharSet *s; 
+		Symbol *sym; Graph *g, *g1, *g2; std::wstring gramName; CharSet *s; 
 		int beg = la->pos; int line = la->line; 
 		while (StartOf(1)) {
 			Get();
@@ -365,7 +365,7 @@ void SetDecl() {
 }
 
 void TokenDecl(int typ) {
-		std::wstring name = NULL; int kind; Symbol *sym; Graph *g; 
+		std::wstring name; int kind; Symbol *sym; Graph *g; 
 		Sym(name, kind);
 		sym = tab->FindSym(name);
 		if (sym != NULL) SemErr(L"name declared twice");
@@ -605,7 +605,7 @@ void Resolver(Position* &pos) {
 }
 
 void Factor(Graph* &g) {
-		std::wstring name = NULL; int kind; Position *pos; bool weak = false; 
+		std::wstring name; int kind; Position *pos; bool weak = false; 
 		 g = NULL;
 		
 		switch (la->kind) {
