@@ -51,18 +51,19 @@ namespace Coco {
 	};
 
 
-	class Errors {
-	public:
-		int count;			// number of errors detected
 
-		Errors() {
-			count = 0;
-		}
+class Errors {
+public:
+	int count;			// number of errors detected
 
-		void SynErr(int line, int col, int n) {
-			std::wstring s;
-			switch (n) {
-					case 0: s = CocoUtil::coco_string_create(L"EOF expected"); break;
+	Errors() {
+		count = 0;
+	}
+
+	void SynErr(int line, int col, int n) {
+		std::wstring s;
+		switch (n) {
+			case 0: s = CocoUtil::coco_string_create(L"EOF expected"); break;
 			case 1: s = CocoUtil::coco_string_create(L"ident expected"); break;
 			case 2: s = CocoUtil::coco_string_create(L"number expected"); break;
 			case 3: s = CocoUtil::coco_string_create(L"string expected"); break;
@@ -104,50 +105,41 @@ namespace Coco {
 			case 39: s = CocoUtil::coco_string_create(L"\"(.\" expected"); break;
 			case 40: s = CocoUtil::coco_string_create(L"\".)\" expected"); break;
 			case 41: s = CocoUtil::coco_string_create(L"??? expected"); break;
-			case 42: s = CocoUtil::coco_string_create(L"this symbol not expected in Coco"); break;
-			case 43: s = CocoUtil::coco_string_create(L"this symbol not expected in TokenDecl"); break;
-			case 44: s = CocoUtil::coco_string_create(L"invalid TokenDecl"); break;
-			case 45: s = CocoUtil::coco_string_create(L"invalid AttrDecl"); break;
-			case 46: s = CocoUtil::coco_string_create(L"invalid SimSet"); break;
-			case 47: s = CocoUtil::coco_string_create(L"invalid Sym"); break;
-			case 48: s = CocoUtil::coco_string_create(L"invalid Term"); break;
-			case 49: s = CocoUtil::coco_string_create(L"invalid Factor"); break;
-			case 50: s = CocoUtil::coco_string_create(L"invalid Attribs"); break;
-			case 51: s = CocoUtil::coco_string_create(L"invalid TokenFactor"); break;
 
-				default:
-				{
-					std::wstringstream ss;
-					ss << "error " << n;
-					s = ss.str();
-				}
-				break;
+			default:
+			{
+				std::wstringstream ss;
+				ss << "error " << n;
+				s = ss.str();
 			}
-			fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
-			CocoUtil::coco_string_delete(s);
-			count++;
+			break;
 		}
+		fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
+		CocoUtil::coco_string_delete(s);
+		count++;
+	}
 
-		void Error(int line, int col, const std::wstring s) {
-			fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
-			count++;
-		}
+	void Error(int line, int col, const std::wstring s) {
+		fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
+		count++;
+	}
 
-		void Warning(int line, int col, const std::wstring s) {
-			fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
-		}
+	void Warning(int line, int col, const std::wstring s) {
+		fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
+	}
 
-		void Warning(const std::wstring s) {
-			fwprintf(stderr, L"%ls\n", s.c_str());
-		}
+	void Warning(const std::wstring s) {
+		fwprintf(stderr, L"%ls\n", s.c_str());
+	}
 
-		void Exception(const std::wstring s) {
-			fwprintf(stderr, L"%ls", s.c_str()); 
-			exit(1);
-		}
-							
+	void Exception(const std::wstring s) {
+		fwprintf(stderr, L"%ls", s.c_str()); 
+		exit(1);
+	}
+						
 
-	}; // Errors
+}; // Errors
+
 
 class Parser {
 private:
@@ -801,8 +793,6 @@ void TokenFactor(Graph* &g) {
 
 
 public:
-
-
 
 	std::shared_ptr<Scanner> scanner;
 	std::shared_ptr<Errors>  errors;

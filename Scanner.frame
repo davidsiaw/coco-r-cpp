@@ -55,6 +55,17 @@ Scanner.h Specification
 #define COCO_MAX_BUFFER_LENGTH (64*COCO_MIN_BUFFER_LENGTH)
 #define COCO_CPP_NAMESPACE_SEPARATOR L':'
 
+#if _MSC_VER >= 1400
+#define coco_swprintf swprintf_s
+#elif _MSC_VER >= 1300
+#define coco_swprintf _snwprintf
+#elif defined __MINGW32__
+#define coco_swprintf _snwprintf
+#else
+// assume every other compiler knows swprintf
+#define coco_swprintf swprintf
+#endif
+
 -->namespace_open
 
 // string handling, wide character
@@ -141,14 +152,14 @@ public:
 	}
 
 	static int coco_string_indexof(const std::wstring data, const wchar_t value) {
-		const std::wstring chr = wcschr(data.c_str(), value);
+		const wchar_t* chr = wcschr(data.c_str(), value);
 
 		if (chr) { return (chr-data.c_str()); }
 		return -1;
 	}
 
 	static int coco_string_lastindexof(const std::wstring data, const wchar_t value) {
-		const std::wstring chr = wcsrchr(data.c_str(), value);
+		const wchar_t* chr = wcsrchr(data.c_str(), value);
 
 		if (chr) { return (chr-data.c_str()); }
 		return -1;
@@ -169,7 +180,7 @@ public:
 	static int coco_string_hash(const std::wstring str) {
 		int h = 0;
 
-		const std::wstring data = str.c_str();
+		const wchar_t* data = str.c_str();
 
 		while (*data != 0) {
 			h = (h * 7) ^ *data;
@@ -181,26 +192,18 @@ public:
 
 	// string handling, ascii character
 
-	static std::wstring coco_string_create(const char* value) {
-		int len = 0;
-		if (value) { len = strlen(value); }
-		std::wstring data = new wchar_t[len + 1];
-		for (int i = 0; i < len; ++i) { data[i] = (wchar_t) value[i]; }
-		data[len] = 0;
+	static std::wstring coco_string_create(const std::string value) {
+		std::wstring data(value.begin(), value.end());
 		return data;
 	}
 
-	static char* coco_string_create_char(const std::wstring value) {
-		int len = coco_string_length(value);
-		char *res = new char[len + 1];
-		for (int i = 0; i < len; ++i) { res[i] = (char) value[i]; }
-		res[len] = 0;
-		return res;
+	static std::string coco_string_create_char(const std::wstring value) {
+		std::string data(value.begin(), value.end());
+		return data;
 	}
 
-	static void coco_string_delete(char* &data) {
-		delete [] data;
-		data = NULL;
+	static void coco_string_delete(std::string &data) {
+		data = "";
 	}
 };
 
@@ -649,9 +652,9 @@ public:
 
 	Scanner(const std::wstring fileName) {
 		FILE* stream;
-		char *chFileName = CocoUtil::coco_string_create_char(fileName);
-		if ((stream = fopen(chFileName, "rb")) == NULL) {
-			fwprintf(stderr, L"--- Cannot open file %ls\n", fileName);
+		std::string chFileName = CocoUtil::coco_string_create_char(fileName);
+		if ((stream = fopen(chFileName.c_str(), "rb")) == NULL) {
+			fwprintf(stderr, L"--- Cannot open file %ls\n", fileName.c_str());
 			exit(1);
 		}
 		CocoUtil::coco_string_delete(chFileName);
@@ -708,8 +711,6 @@ public:
 -->namespace_close
 
 #endif
-
-namespace 
 
 -->end_scanner
 

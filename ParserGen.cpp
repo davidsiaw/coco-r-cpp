@@ -422,16 +422,17 @@ void ParserGen::WriteParser () {
 	if (usingPos != NULL) {CopySourcePart(usingPos, 0); fwprintf(gen, L"\n");}
 	g.CopyFramePart(L"-->namespace_open");
 	int nrOfNs = GenNamespaceOpen(tab->nsName);
-
-
+	
 	GenTokensHeader();  /* ML 2002/09/07 write the token kinds */
+
+	g.CopyFramePart(L"-->errors"); fwprintf(gen, L"%ls", err.c_str());
+
+
 	//fwprintf(gen, L"\tint maxT;\n");
 
 	g.CopyFramePart(L"-->constantsheader");
 	g.CopyFramePart(L"-->pragmas"); GenCodePragmas();
 	g.CopyFramePart(L"-->productions"); GenProductions();
-
-	g.CopyFramePart(L"-->errors"); fwprintf(gen, L"%ls", err.c_str());
 
 	g.CopyFramePart(L"-->declarations"); CopySourcePart(tab->semDeclPos, 0);
 	//g.CopyFramePart(L"-->productionsheader"); GenProductionsHeader();

@@ -43,9 +43,9 @@ namespace Coco {
 std::wstring DFA::Ch(wchar_t ch) {
 	std::wstringstream format;
 	if (ch < L' ' || ch >= 127 || ch == L'\'' || ch == L'\\')
-		format << (int)ch << "'\0";
+		format << (int)ch << "\0";
 	else
-		format << "L'" << (int)ch << "'\0";
+		format << "L'" << ch << "'\0";
 	return format.str();
 }
 
@@ -826,6 +826,7 @@ void DFA::WriteScanner() {
 	}
 
 	g.CopyFramePart(L"-->namespace_close");
+	GenNamespaceClose(nrOfNs);
 
 	g.CopyFramePart(L"-->end_scanner");
 

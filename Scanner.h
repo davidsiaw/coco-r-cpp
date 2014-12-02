@@ -33,7 +33,6 @@ Coco/R itself) does not fall under the GNU General Public License.
 #include <iostream>
 #include <map>
 #include <sstream>
-#include <memory>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -131,7 +130,7 @@ public:
 		return data1 + data2;
 	}
 
-	static std::wstring coco_string_create_append(const wchar_t *target, const wchar_t appendix) {
+	static std::wstring coco_string_create_append(const std::wstring target, const wchar_t appendix) {
 		return target + appendix;
 	}
 
@@ -195,8 +194,8 @@ public:
 	}
 
 	static std::string coco_string_create_char(const std::wstring value) {
-		std::string res(value.begin(), value.end());
-		return res;
+		std::string data(value.begin(), value.end());
+		return data;
 	}
 
 	static void coco_string_delete(std::string &data) {
@@ -806,11 +805,11 @@ public:
 		Init();
 	}
 
-	Scanner(const wchar_t* fileName) {
+	Scanner(const std::wstring fileName) {
 		FILE* stream;
 		std::string chFileName = CocoUtil::coco_string_create_char(fileName);
 		if ((stream = fopen(chFileName.c_str(), "rb")) == NULL) {
-			fwprintf(stderr, L"--- Cannot open file %ls\n", fileName);
+			fwprintf(stderr, L"--- Cannot open file %ls\n", fileName.c_str());
 			exit(1);
 		}
 		CocoUtil::coco_string_delete(chFileName);
@@ -910,6 +909,8 @@ bool Comment1() {
 
 }; // end Scanner
 
-}; // namespace
+} // namespace
+
 
 #endif
+

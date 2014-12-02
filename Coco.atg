@@ -58,7 +58,7 @@ COMPILER Coco
 		pgen = NULL;
 		id  = 0;
 		str = 1;
-		tokenString = NULL;
+		tokenString = L"";
 		noString = CocoUtil::coco_string_create(L"-none-");
 	}
 
@@ -279,12 +279,12 @@ TokenDecl<int typ>              (. std::wstring name; int kind; Symbol *sym; Gra
                                      sym = tab->NewSym(typ, name, t->line);
                                      sym->tokenKind = Symbol::fixedToken;
                                    }
-                                   tokenString;
+                                   tokenString = L"";
                                  .)
   SYNC
   ( '=' TokenExpr<g> '.'        (. if (kind == str) SemErr(L"a literal must not be declared with a structure");
                                    tab->Finish(g);
-                                   if (tokenString == NULL || CocoUtil::coco_string_equal(tokenString, noString))
+                                   if (CocoUtil::coco_string_equal(tokenString, noString))
                                      dfa->ConvertToStates(g->l, sym);
                                    else { // TokenExpr is a single string
                                      if ((*(tab->literals))[tokenString] != NULL)
@@ -460,7 +460,7 @@ TokenFactor<Graph* &g>        (. std::wstring name; int kind; .)
                                      tokenString = CocoUtil::coco_string_create(noString);
                                    } else { // str
                                      g = tab->StrToGraph(name);
-                                     if (tokenString == NULL) tokenString = CocoUtil::coco_string_create(name);
+                                     if (tokenString.length() == 0) tokenString = CocoUtil::coco_string_create(name);
                                      else tokenString = CocoUtil::coco_string_create(noString);
                                    }
                                  .)

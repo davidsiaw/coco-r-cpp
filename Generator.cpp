@@ -103,7 +103,7 @@ namespace Coco {
 		FILE *scannerFram = fram;
 		fram = file;
 
-		CopyFramePart(NULL);
+		CopyFramePart(L"");
 		fram = scannerFram;
 
 		fclose(file);
@@ -146,7 +146,8 @@ namespace Coco {
 
 		fwscanf(fram, L"%lc", &ch); //	fram.ReadByte();
 		while (!feof(fram)) { // ch != EOF
-			if (stop.length() == 0 && ch == startCh) {
+
+			if (stop.length() != 0 && ch == startCh) {
 				int i = 0;
 				do {
 					if (i == endOfStopString) return; // stop[0..i] found
@@ -164,10 +165,8 @@ namespace Coco {
 			}
 		}
 		if (stop.length() != 0) {
-
 			std::wstringstream wss;
 			wss << L" -- Incomplete or corrupt frame file: " << frameFile << " at " << stop << "\n";
-
 			errors->Exception(wss.str().c_str());
 		}
 	}

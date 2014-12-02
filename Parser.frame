@@ -42,6 +42,54 @@ Parser.h Specification
 
 -->namespace_open
 
+
+class Errors {
+public:
+	int count;			// number of errors detected
+
+	Errors() {
+		count = 0;
+	}
+
+	void SynErr(int line, int col, int n) {
+		std::wstring s;
+		switch (n) {
+-->errors
+			default:
+			{
+				std::wstringstream ss;
+				ss << "error " << n;
+				s = ss.str();
+			}
+			break;
+		}
+		fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
+		CocoUtil::coco_string_delete(s);
+		count++;
+	}
+
+	void Error(int line, int col, const std::wstring s) {
+		fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
+		count++;
+	}
+
+	void Warning(int line, int col, const std::wstring s) {
+		fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
+	}
+
+	void Warning(const std::wstring s) {
+		fwprintf(stderr, L"%ls\n", s.c_str());
+	}
+
+	void Exception(const std::wstring s) {
+		fwprintf(stderr, L"%ls", s.c_str()); 
+		exit(1);
+	}
+						
+
+}; // Errors
+
+
 class Parser {
 private:
 -->constantsheader
@@ -104,53 +152,6 @@ private:
 	-->productions
 
 public:
-
-
-	class Errors {
-	public:
-		int count;			// number of errors detected
-
-		Errors() {
-			count = 0;
-		}
-
-		void SynErr(int line, int col, int n) {
-			std::wstring s;
-			switch (n) {
-		-->errors
-				default:
-				{
-					std::wstringstream ss;
-					ss << "error " << n;
-					s = ss.str();
-				}
-				break;
-			}
-			fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
-			CocoUtil::coco_string_delete(s);
-			count++;
-		}
-
-		void Error(int line, int col, const std::wstring s) {
-			fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
-			count++;
-		}
-
-		void Warning(int line, int col, const std::wstring s) {
-			fwprintf(stderr, L"-- line %d col %d: %ls\n", line, col, s.c_str());
-		}
-
-		void Warning(const std::wstring s) {
-			fwprintf(stderr, L"%ls\n", s.c_str());
-		}
-
-		void Exception(const std::wstring s) {
-			fwprintf(stderr, L"%ls", s.c_str()); 
-			exit(1);
-		}
-							
-
-	}; // Errors
 
 	std::shared_ptr<Scanner> scanner;
 	std::shared_ptr<Errors>  errors;
