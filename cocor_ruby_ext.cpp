@@ -54,6 +54,8 @@ VALUE method_compile(VALUE rubySelf, VALUE rubySrcName, VALUE rubyFramedir, VALU
 	char *chTrFileName = NULL;
 	bool emitLines = false;
 
+	// basically copy pasta from Coco.cpp
+
 	int pos = coco_string_lastindexof(srcName, '/');
 	if (pos < 0) pos = coco_string_lastindexof(srcName, '\\');
 	wchar_t* file = coco_string_create(srcName);
